@@ -1,0 +1,14 @@
+--create internal load balancer in zone1
+az network lb create --resource-group demorg --name mdmLoadBalancer --sku Standard --vnet-name demorg-vnet --subnet default --frontend-ip-name mdmFrontEnd --backend-pool-name mdmBackEndPool --frontend-ip-zone 1
+
+--create health probe
+az network lb probe create --resource-group demorg --lb-name mdmLoadBalancer --name mdmHealthProbe --protocol tcp --port 80
+
+--create internal load balancing rule
+az network lb rule create --resource-group demorg --lb-name mdmLoadBalancer --name mdmTCPRule --protocol All --frontend-port 0 --backend-port 0 --frontend-ip-name mdmFrontEnd --backend-pool-name mdmBackEndPool --probe-name mdmHealthProbe --idle-timeout 15 --enable-tcp-reset true
+
+-- add primary vm to backend pool
+az network nic ip-config address-pool add --address-pool mdmBackendPool --ip-config-name ipconfig1 --nic-name rhelvm1900 --resource-group demorg --lb-name mdmLoadBalancer
+
+--add secondary vm to backend pool
+az network nic ip-config address-pool add --address-pool mdmBackendPool --ip-config-name ipconfig1 --nic-name rhelvm2465 --resource-group demorg --lb-name mdmLoadBalancer
